@@ -5,6 +5,7 @@ import by.modsen.bookservice.dto.response.BookResponse;
 import by.modsen.bookservice.entity.Book;
 import by.modsen.bookservice.exception.BookNotFoundException;
 import by.modsen.bookservice.exception.BookWithIsbnExistException;
+import by.modsen.bookservice.feign.LibraryServiceClient;
 import by.modsen.bookservice.mapper.BookMapper;
 import by.modsen.bookservice.repository.BookRepository;
 import by.modsen.bookservice.util.ExceptionConstants;
@@ -20,6 +21,7 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
+    private final LibraryServiceClient libraryServiceClient;
 
     public BookResponse getBookById(Long id) {
         Book book = bookRepository.findById(id)
@@ -45,6 +47,7 @@ public class BookService {
         }
         Book book = bookMapper.toBookEntity(bookRequest);
         bookRepository.save(book);
+        libraryServiceClient.registerBook(book.getId());
         return bookMapper.toBookResponse(book);
     }
 
@@ -66,6 +69,7 @@ public class BookService {
             throw new BookNotFoundException(String.format(ExceptionConstants.BOOK_NOT_FOUND, id));
         }
         bookRepository.deleteById(id);
+        libraryServiceClient.deleteRecord(id);
     }
 
 }
